@@ -1,18 +1,16 @@
 package org.example.core
 
-import kotlinx.coroutines.runBlocking
-import org.jetbrains.exposed.sql.Database
-import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.coroutineScope
 
 class SearchBuilder {
     var urlDataBase: String? = null
     var userDataBase: String? = null
     var passwordDataBase: String? = null
     var timeIndexing: Long = 5000
+    var coroutineScope: CoroutineScope? = null
 
-    private lateinit var dataBase:DatabaseFactory
-
-    fun setUrldDataBase(url: String) = apply {
+    fun setUrlDataBase(url: String) = apply {
         urlDataBase = url
     }
 
@@ -28,22 +26,8 @@ class SearchBuilder {
         timeIndexing = time
     }
 
-    fun build() {
-        run()
+    suspend fun build(): SearchEngine {
+        val searchEngine = SearchEngine()
+        return searchEngine.run(urlDataBase!!, userDataBase!!, passwordDataBase!!, coroutineScope!!)
     }
-
-    private fun run() = runBlocking {
-        if (!urlDataBase.isNullOrBlank() && !userDataBase.isNullOrBlank() && !passwordDataBase.isNullOrBlank()) {
-            // TODO добавить поддержку других баз данных для подключения
-            DatabaseFactory.create(Database.connect(url = "jdbc:postgresql://localhost:5432/$urlDataBase", user = userDataBase!!, password = passwordDataBase!!))
-        } else {
-            throw IllegalArgumentException("")
-        }
-    }
-}
-
-enum class DriverSelect {
-    POSTGRES,
-    MARIADB,
-    SQLITE
 }

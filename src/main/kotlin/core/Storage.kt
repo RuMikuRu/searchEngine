@@ -1,66 +1,37 @@
-import org.example.core.model.IndexStorage
-import java.util.concurrent.ConcurrentHashMap
+package org.example.core
 
-class InMemoryIndexStorage : IndexStorage {
-    private val storage = ConcurrentHashMap<String, Map<String, Any>>()
-    private val deletedIds = mutableSetOf<String>()
+import org.example.core.Storage.SearchResult
+import kotlin.collections.component1
+import kotlin.collections.component2
 
-    // Для мониторинга и отладки
-    private var indexedCount = 0
-    private var updatedCount = 0
-    private var deletedCount = 0
+object Storage {
+    private val dataMap: HashMap<String, HashMap<String, List<String>>> = hashMapOf()
 
-    override fun indexDocument(id: String, content: Map<String, Any>) {
-        require(!existsDocument(id)) { "Document $id already exists" }
-        storage[id] = content
-        indexedCount++
-        deletedIds.remove(id)
+    fun addData(tableName: String, tableData: HashMap<String, List<String>>) {
+        dataMap[tableName] = tableData
     }
 
-    override fun updateDocument(id: String, content: Map<String, Any>) {
-        check(existsDocument(id)) { "Document $id not found" }
-        storage[id] = storage[id]!! + content
-        updatedCount++
-    }
+    fun getDataMap() = dataMap
 
-    override fun removeDocument(id: String) {
-        if (storage.remove(id) != null) {
-            deletedCount++
-            deletedIds.add(id)
+    data class SearchResult(val table: String, val column: String, val value: String)
+}
+
+fun search(
+    query: String,
+    tableFilter: String? = null,
+    columnFilter: String? = null
+): List<SearchResult> {
+    val results = mutableListOf<SearchResult>()
+    Storage.getDataMap().forEach { (table, columns) ->
+        if (tableFilter != null && table != tableFilter) return@forEach
+        columns.forEach { (col, values) ->
+            if (columnFilter != null && col != columnFilter) return@forEach
+            values.forEach { value ->
+                if (value.contains(query, ignoreCase = true)) {
+                    results.add(SearchResult(table, col, value))
+                }
+            }
         }
     }
-
-    override fun commit() {
-        // Операция фиксации не требуется для in-memory хранилища
-        // Можно добавить логирование статистики
-        println("""
-            Indexing stats:
-            - Total documents: ${storage.size}
-            - New indexed: $indexedCount
-            - Updated: $updatedCount
-            - Deleted: $deletedCount
-        """.trimIndent())
-
-        // Сброс счетчиков
-        indexedCount = 0
-        updatedCount = 0
-        deletedCount = 0
-    }
-
-    override fun existsDocument(id: String): Boolean {
-        return storage.containsKey(id) && !deletedIds.contains(id)
-    }
-
-    // Дополнительные методы для доступа к данным
-    fun getDocument(id: String): Map<String, Any>? = storage[id]
-
-    fun getAllDocuments(): Map<String, Map<String, Any>> = storage.toMap()
-
-    fun clear() {
-        storage.clear()
-        deletedIds.clear()
-        indexedCount = 0
-        updatedCount = 0
-        deletedCount = 0
-    }
+    return results
 }
