@@ -5,13 +5,13 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 object Storage {
-    private val dataMap: HashMap<String, HashMap<String, List<String>>> = hashMapOf()
+    private val dataTableMap: HashMap<String, HashMap<String, List<String>>> = hashMapOf()
 
     fun addData(tableName: String, tableData: HashMap<String, List<String>>) {
-        dataMap[tableName] = tableData
+        dataTableMap[tableName] = tableData
     }
 
-    fun getDataMap() = dataMap
+    fun getDataMap() = dataTableMap
 
     data class SearchResult(val table: String, val column: String, val value: String)
 }

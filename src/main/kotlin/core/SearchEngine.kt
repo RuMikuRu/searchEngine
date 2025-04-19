@@ -16,6 +16,7 @@ class SearchEngine {
         private const val TYPE = "TABLE"
         private const val TABLE_NAME_PATTERN = "%"
         private const val TABLE_NAME = "TABLE_NAME"
+        private const val NULL = "NULL"
     }
 
     val storage: Storage = Storage
@@ -65,7 +66,7 @@ class SearchEngine {
             while (rs.next()) {
                 for (i in 1..columnCount) {
                     val columnName = meta.getColumnName(i)
-                    val value = rs.getString(i) ?: "NULL"
+                    val value = rs.getString(i) ?: NULL
                     columnData[columnName]?.add(value)
                 }
             }
@@ -78,6 +79,8 @@ class SearchEngine {
 }
 
 object Indexing {
+
+    private const val NULL = "NULL"
 
     private var lastIds: HashMap<String, Long> = hashMapOf()
 
@@ -132,7 +135,7 @@ object Indexing {
             for (i in 1..columnCount) {
                 println("tyt ${rs.getString(i)}")
                 val columnName = meta.getColumnName(i)
-                val value = rs.getString(i) ?: "NULL"
+                val value = rs.getString(i) ?: NULL
                 println("  $columnName -> $value")
                 columnData[columnName]?.add(value)
             }
