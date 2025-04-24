@@ -1,5 +1,6 @@
 package org.example.core.FileSearch.api
 
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
 import org.example.core.FileSearch.FileSearchEngine
 import org.example.core.FileSearch.SearchOptions
@@ -14,7 +15,7 @@ class FastSearch private constructor(
     private val fileSearcher = FileSearchEngine()
 
     /** Executes the search asynchronously and returns matching results. */
-    fun run(): List<SearchResult> = runBlocking {
+    fun run(): Flow<SearchResult> = runBlocking {
         fileSearcher.search(root, options)
     }
 
