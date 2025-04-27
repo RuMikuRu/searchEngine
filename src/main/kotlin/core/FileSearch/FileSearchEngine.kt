@@ -22,7 +22,6 @@ class FileSearchEngine {
 
     @OptIn(FlowPreview::class)
     suspend fun search(rootDir: Path, options: SearchOptions): Flow<SearchResult> = coroutineScope {
-        // Следим за изменениями и пересобираем кэш при необходимости
         WatchServiceManager.startWatching(rootDir) {
             launch {
                 println("Filesystem change detected in: $it")
@@ -39,12 +38,36 @@ class FileSearchEngine {
         }.flatMapConcat { index ->
             index.mapNotNull { result ->
                 val nameMatches = options.namePattern?.matches(Path.of(result.path).fileName.toString()) != false
+
                 val contentMatches = options.contentQuery?.let { query ->
-                    !result.isDirectory && FileContentScanner.containsText(Path.of(result.path), query, useFuzzy = true, 3)
+                    if (result.isDirectory) {
+                        false
+                    } else {
+                        when {
+                            options.customContentMatcher != null -> {
+                                options.customContentMatcher.invoke(Path.of(result.path), query)
+                            }
+                            options.fuzzySearch -> {
+                                FileContentScanner.containsText(
+                                    path = Path.of(result.path),
+                                    query = query,
+                                    useFuzzy = true,
+                                    maxDistance = 3
+                                )
+                            }
+                            else -> {
+                                FileContentScanner.containsText(
+                                    path = Path.of(result.path),
+                                    query = query,
+                                    useFuzzy = false
+                                )
+                            }
+                        }
+                    }
                 } != false
 
                 if (nameMatches && contentMatches) result else null
-            }.asFlow<SearchResult>()
+            }.asFlow()
         }
     }
 }

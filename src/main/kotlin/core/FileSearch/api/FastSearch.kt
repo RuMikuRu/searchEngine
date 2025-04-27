@@ -29,7 +29,9 @@ class FastSearch private constructor(
                     namePattern = builder.mask?.let { FileUtils.wildcardToRegex(it) },
                     contentQuery = builder.content,
                     includeDirs = builder.includeDirs,
-                    includeFiles = builder.includeFiles
+                    includeFiles = builder.includeFiles,
+                    fuzzySearch = builder.fuzzySearch,
+                    customContentMatcher = builder.customContentMatcher
                 )
             )
         }
@@ -41,5 +43,7 @@ class FastSearch private constructor(
         var content: String? = null
         var includeDirs: Boolean = false
         var includeFiles: Boolean = true
+        var fuzzySearch = false
+        val customContentMatcher: (suspend (Path, String) -> Boolean)? = null
     }
 }
