@@ -13,6 +13,8 @@ val results = FastSearch {
     path = "/home/user/docs"
     mask = "*.pdf"
     content = "report"
+    includeDirs = true
+    includeFiles = true
 }.run()
 
 results.forEach { println(it.path) }
@@ -21,6 +23,6 @@ results.forEach { println(it.path) }
 ## 🔧 Gradle
 ```kotlin
 dependencies {
-    implementation("com.yourorg:fastsearch-api:1.0.0")
+    implementation(files("path"))
 }
 ```
