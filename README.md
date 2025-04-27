@@ -6,6 +6,7 @@
 - Caching & indexing
 - Live monitoring with WatchService
 - CLI and easy-to-use API wrapper
+- FuzzySearch
 
 ## 📦 Usage
 ```kotlin

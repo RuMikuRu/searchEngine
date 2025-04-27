@@ -40,7 +40,7 @@ class FileSearchEngine {
             index.mapNotNull { result ->
                 val nameMatches = options.namePattern?.matches(Path.of(result.path).fileName.toString()) != false
                 val contentMatches = options.contentQuery?.let { query ->
-                    !result.isDirectory && FileContentScanner.containsText(Path.of(result.path), query)
+                    !result.isDirectory && FileContentScanner.containsText(Path.of(result.path), query, useFuzzy = true, 3)
                 } != false
 
                 if (nameMatches && contentMatches) result else null
