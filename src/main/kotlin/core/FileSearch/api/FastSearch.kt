@@ -10,9 +10,12 @@ import java.nio.file.Path
 
 class FastSearch private constructor(
     private val root: Path,
-    private val options: SearchOptions
+    private val options: SearchOptions,
+    private val plugins: List<SearchPlugin> // передаем плагины
 ) {
-    private val fileSearcher = FileSearchEngine()
+    private val fileSearcher = FileSearchEngine().apply {
+        plugins.forEach { registerPlugin(it) } // регистрируем
+    }
 
     /** Executes the search asynchronously and returns matching results. */
     fun run(): Flow<SearchResult> = runBlocking {
@@ -32,7 +35,8 @@ class FastSearch private constructor(
                     includeFiles = builder.includeFiles,
                     fuzzySearch = builder.fuzzySearch,
                     customContentMatcher = builder.customContentMatcher
-                )
+                ),
+                plugins = builder.plugins
             )
         }
     }
@@ -44,6 +48,16 @@ class FastSearch private constructor(
         var includeDirs: Boolean = false
         var includeFiles: Boolean = true
         var fuzzySearch = false
-        val customContentMatcher: (suspend (Path, String) -> Boolean)? = null
+        var customContentMatcher: (suspend (Path, String) -> Boolean)? = null
+
+        internal val plugins = mutableListOf<SearchPlugin>() // список плагинов
+
+        fun plugins(configure: MutableList<SearchPlugin>.() -> Unit) {
+            plugins.configure()
+        }
+    }
+
+    operator fun MutableList<SearchPlugin>.plusAssign(plugin: SearchPlugin) {
+        add(plugin)
     }
 }

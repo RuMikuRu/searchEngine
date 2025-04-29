@@ -7,6 +7,7 @@
 - Live monitoring with WatchService
 - CLI and easy-to-use API wrapper
 - FuzzySearch
+- Add custom plugins
 
 ## 📦 Usage
 ```kotlin
@@ -33,6 +34,38 @@ val results = FastSearch {
 
 results.forEach { println(it.path) }
 ```
+
+## Create plugins
+
+```kotlin
+fun main() = runBlocking {
+    val results = FastSearch {
+        path = "C:\\Users\\bkmzo\\Documents\\kotlin\\test1\\app"
+        content = "plugins"
+        includeFiles = true
+        includeDirs = true
+        plugins {
+            add(object : SearchPlugin { // <- create plugin
+                override suspend fun match(file: Path, query: String): Boolean {
+                    return try {
+                        Files.newInputStream(file).buffered().reader().use {
+                            val buffer = CharArray(5000)
+                            val read = it.read(buffer)
+                            val text = String(buffer, 0, read)
+                            text.contains(query, ignoreCase = true)
+                        }
+                    } catch (e: Exception) {
+                        false
+                    }
+                }
+            })
+        }
+    }.run().collect {
+        println(it.path)
+    }
+}
+```
+
 
 ## 🔧 Gradle
 ```kotlin

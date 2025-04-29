@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.flatMapConcat
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
+import org.example.core.FileSearch.api.SearchPlugin
 import org.example.core.FileSearch.indexing.FileSystemIndexer
 import org.example.core.FileSearch.indexing.IndexCache
 import org.example.core.FileSearch.indexing.WatchServiceManager
@@ -19,6 +20,11 @@ import java.nio.file.Path
 
 class FileSearchEngine {
     private val indexer = FileSystemIndexer()
+    private val plugins = mutableListOf<SearchPlugin>()
+
+    fun registerPlugin(plugin: SearchPlugin) {
+        plugins.add(plugin)
+    }
 
     @OptIn(FlowPreview::class)
     suspend fun search(rootDir: Path, options: SearchOptions): Flow<SearchResult> = coroutineScope {
@@ -46,6 +52,9 @@ class FileSearchEngine {
                         when {
                             options.customContentMatcher != null -> {
                                 options.customContentMatcher.invoke(Path.of(result.path), query)
+                            }
+                            plugins.isNotEmpty() -> {
+                                plugins.any { it.match(Path.of(result.path), query) }
                             }
                             options.fuzzySearch -> {
                                 FileContentScanner.containsText(
